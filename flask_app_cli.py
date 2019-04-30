@@ -2,6 +2,7 @@ from flask import Flask, request, abort, jsonify, render_template
 import string
 import random
 import os
+from flask_cors import CORS
 # API import
 from aws_translation import aws_translate
 from text_summarization_api import summarize
@@ -91,4 +92,5 @@ def summary():
 
 
 if __name__ == '__main__':
+    CORS(app)
     app.run(host='0.0.0.0', port=3000 )
