@@ -1,5 +1,6 @@
 from flask import Flask, request, abort, jsonify, render_template
 import string
+import unicodedata
 import random
 import os
 # API import
@@ -8,9 +9,11 @@ from text_summarization_api import summarize
 
 app = Flask(__name__)
 
+
 def random_string(size=4):
-  chars = "abcdefghijklmnopqrstuvwxyz"
-  return ''.join(random.choice(chars) for _ in range(size))
+    chars = "abcdefghijklmnopqrstuvwxyz"
+    return ''.join(random.choice(chars) for _ in range(size))
+
 
 @app.route('/')
 def hello_world():
@@ -28,7 +31,9 @@ def translate():
 
     # Translation
     try:
-      output = aws_translate(input, input_language, output_language)
+        output = aws_translate(input, input_language, output_language)
+        # Convert unicode
+        output = unicodedata.normalize('NFKD', output).encode('ascii', 'ignore')
     except:
         data = {
           'action': "translated",
@@ -55,32 +60,32 @@ def summary():
 
     input = request.json['text']
     try:
-      # Write input to file
-      tmp_file = random_string()
-      open_file = open(tmp_file, 'w')
-      open_file.write(input)
-      open_file.close()
+        # Write input to file
+        tmp_file = random_string()
+        open_file = open(tmp_file, 'w')
+        open_file.write(input)
+        open_file.close()
 
-      file_suffix = '_summarized'
-      # To summarization
-      print('In Summarization')
-      summarize(tmp_file, suffix = file_suffix)
-    
-      open_file = open(tmp_file + file_suffix , 'r')
-      output = open_file.readlines()
-      output = ''.join(output)
-      open_file.close()
+        file_suffix = '_summarized'
+        # To summarization
+        print('In Summarization')
+        summarize(tmp_file, suffix=file_suffix)
 
-      # TODO: Delete file
-      os.system("rm {}".format(tmp_file))
-      os.system("rm {}".format(tmp_file+file_suffix))
-      
+        open_file = open(tmp_file + file_suffix, 'r')
+        output = open_file.readlines()
+        output = ''.join(output)
+        open_file.close()
+
+        # TODO: Delete file
+        os.system("rm {}".format(tmp_file))
+        os.system("rm {}".format(tmp_file+file_suffix))
+
     except:
-      data = {
-        'action': "summary",
-        'result': ""
-      }
-      return jsonify(data), 500
+        data = {
+          'action': "summary",
+          'result': ""
+        }
+        return jsonify(data), 500
 
     data = {
         'action': "summary",
@@ -91,4 +96,4 @@ def summary():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000 )
+    app.run(host='0.0.0.0', port=3000)
