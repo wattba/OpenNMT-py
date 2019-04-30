@@ -1,5 +1,6 @@
 from flask import Flask, request, abort, jsonify, render_template
 import string
+import unicodedata
 import random
 import os
 from flask_cors import CORS
@@ -30,6 +31,8 @@ def translate():
     # Translation
     try:
       output = aws_translate(input, input_language, output_language)
+      # Convert unicode
+      output = unicodedata.normalize('NFKD', output).encode('ascii', 'ignore')
     except:
         data = {
           'action': "translated",
